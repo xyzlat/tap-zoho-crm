@@ -1,6 +1,6 @@
 import os
 import requests
-from requests.exceptions import ConnectionError, Timeout
+from requests.exceptions import ConnectionError, Timeout, HTTPError
 import datetime
 import backoff
 
@@ -77,7 +77,7 @@ class ZohoClient:
 
     @backoff.on_exception(
         backoff.expo,
-        (Timeout, ConnectionError, WaitAndRetry),
+        (Timeout, ConnectionError, WaitAndRetry, HTTPError),
         max_tries=5,
         factor=2,
     )
