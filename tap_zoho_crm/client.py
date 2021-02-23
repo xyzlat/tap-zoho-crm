@@ -14,7 +14,7 @@ except:
 
 
 AUTH_URL = "https://accounts.zoho.eu/oauth/v2/token"
-REDIRECT_URI = "https://app.dreamdata.io/oauth2/pipedrive/callback"
+REDIRECT_URI = "https://app.dreamdata.io/oauth2/zoho-crm/callback"
 API_PATH = "/crm/v2/"
 DEFAULT_PER_PAGE = 200
 

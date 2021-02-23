@@ -77,19 +77,26 @@ def sync(client, config, state):
 
     for stream_name, stream_metadata in STREAMS.items():
         with metrics.record_counter(stream_name) as counter:
-            last_bookmark_value = get_bookmark(state, stream_name, start_date)
-            last_bookmark_value_dt = strptime_to_utc(last_bookmark_value)
-            bookmark_key = stream_metadata['bookmark_key']
-            params = stream_metadata['params']
-            params['modified_since'] = last_bookmark_value
-            for record in client.paginate_generator(stream_metadata['module_name'], **params):
-                bookmark_value = record[bookmark_key]
-                bookmark_value_dt = strptime_to_utc(bookmark_value)
-                if bookmark_value_dt > last_bookmark_value_dt:
-                    write_record(
-                        stream_name, record, time_extracted=utils.now()
-                    )
-                    write_bookmark(state, stream_name, bookmark_value)
-                    last_bookmark_value = bookmark_value
-                    last_bookmark_value_dt = bookmark_value_dt
-                    counter.increment()
+            try:
+                last_bookmark_value = get_bookmark(
+                    state, stream_name, start_date)
+                last_bookmark_value_dt = strptime_to_utc(last_bookmark_value)
+                bookmark_key = stream_metadata['bookmark_key']
+                params = stream_metadata['params']
+                params['modified_since'] = last_bookmark_value
+                for record in client.paginate_generator(stream_metadata['module_name'], **params):
+                    bookmark_value = record[bookmark_key]
+                    bookmark_value_dt = strptime_to_utc(bookmark_value)
+                    if bookmark_value_dt > last_bookmark_value_dt:
+                        write_record(
+                            stream_name, record, time_extracted=utils.now()
+                        )
+                        write_bookmark(state, stream_name, bookmark_value)
+                        last_bookmark_value = bookmark_value
+                        last_bookmark_value_dt = bookmark_value_dt
+                        counter.increment()
+            except:
+                LOGGER.exception(f"Error during sync of {stream_name}")
+                raise
+            finally:
+                write_bookmark(state, stream_name, bookmark_value)
