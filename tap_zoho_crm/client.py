@@ -12,7 +12,6 @@ except:
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger()
 
-# scopes: AAAServer.profile.read,ZohoCRM.modules.leads.READ,ZohoCRM.modules.contacts.READ,ZohoCRM.modules.deals.READ
 
 AUTH_URL = "https://accounts.zoho.eu/oauth/v2/token"
 REDIRECT_URI = "https://app.dreamdata.io/oauth2/pipedrive/callback"
