@@ -9,7 +9,7 @@ from singer import metrics, utils
 from singer.utils import strptime_to_utc
 
 LOGGER = singer.get_logger()
-
+DEFAULT_START_DATE = '2010-01-01T00:00:00'
 
 STREAMS = {
     'leads': {
@@ -73,7 +73,7 @@ def write_bookmark(state, stream, value):
 
 
 def sync(client, config, state):
-    start_date = config.get("start_date")
+    start_date = config.get("start_date") or DEFAULT_START_DATE
 
     for stream_name, stream_metadata in STREAMS.items():
         with metrics.record_counter(stream_name) as counter:
