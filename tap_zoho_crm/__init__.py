@@ -15,8 +15,8 @@ REQUIRED_CONFIG_KEYS = [
     "start_date",
     "client_id",
     "client_secret",
-    "access_token",
     "refresh_token",
+    "api_domain"
 ]
 
 
