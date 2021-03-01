@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="tap-zoho-crm",
-    version="0.0.3",
+    version="0.0.4",
     description="tap to fetch zoho crm API",
     py_modules=["tap_zoho_crm"],
     install_requires=[
