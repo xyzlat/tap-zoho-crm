@@ -78,7 +78,7 @@ class ZohoClient:
     @backoff.on_exception(
         backoff.expo,
         (Timeout, ConnectionError, WaitAndRetry, HTTPError),
-        max_tries=5,
+        max_tries=4,
         factor=2,
     )
     def make_request(self, url, **params):
