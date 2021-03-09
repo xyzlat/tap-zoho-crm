@@ -32,6 +32,27 @@ STREAMS = {
             'per_page': 200
         },
         'bookmark_key': 'Modified_Time',
+    },
+    'accounts': {
+        'module_name': 'Accounts',
+        'params': {
+            'per_page': 200
+        },
+        'bookmark_key': 'Modified_Time',
+    },
+    'events': {
+        'module_name': 'Events',
+        'params': {
+            'per_page': 200
+        },
+        'bookmark_key': 'Modified_Time',
+    },
+    'activities': {
+        'module_name': 'Activities',
+        'params': {
+            'per_page': 200
+        },
+        'bookmark_key': 'Modified_Time',
     }
 }
 
