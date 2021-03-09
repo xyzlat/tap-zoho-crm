@@ -81,9 +81,9 @@ class ZohoClient:
         max_tries=5,
         factor=2,
     )
-    def make_request(self, zoho_module, **params):
+    def make_request(self, url, **params):
         modified_since = params.pop("modified_since", None)
-        url = f"{self.api_domain}{API_PATH}{zoho_module}"
+
         headers = {"Authorization": f"Zoho-oauthtoken {self.access_token}"}
         if modified_since:
             headers["If-Modified-Since"] = modified_since
@@ -91,7 +91,7 @@ class ZohoClient:
 
         if response.status_code == 304:
             logger.warning(
-                f"{zoho_module} has no new material after {modified_since}")
+                f"{url} has no new material after {modified_since}")
             return None
         if response.status_code == 429:
             logger.warning("got rate limited, waiting a bit")
@@ -100,7 +100,7 @@ class ZohoClient:
                 "got internal server error from zoho, waiting a bit")
         elif response.status_code in [400, 401, 403]:
             logger.warning(
-                "got possible bad auth, refreshing tokens and trying again")
+                f"got possible bad auth, refreshing tokens and trying again url: {url} response: {response.text}")
             self.request_refresh_token()
         else:
             response.raise_for_status()
@@ -108,13 +108,36 @@ class ZohoClient:
 
         raise WaitAndRetry()
 
+    def fetch_records(self, zoho_module, **params):
+        url = f"{self.api_domain}{API_PATH}{zoho_module}"
+        return self.make_request(url, **params)
+
+    def fetch_fields(self, zoho_module):
+        url = f"{self.api_domain}{API_PATH}settings/fields"
+        params = {"module": zoho_module}
+        response = self.make_request(url, **params)
+        standard_fields, custom_fields = [], []
+
+        for field_meta in response['fields']:
+            if field_meta['custom_field']:
+                custom_fields.append(field_meta['api_name'])
+            else:
+                standard_fields.append(field_meta['api_name'])
+
+        logger.info(f"requesting following fields for module: '{zoho_module}'")
+        logger.info(f"standard fields: {standard_fields}")
+        logger.info(f"custom fields: {custom_fields}")
+        return standard_fields + custom_fields
+
     def paginate_generator(self, zoho_module, **params):
+        params['fields'] = self.fetch_fields(zoho_module)
+
         more_records = True
         per_page = params.pop("per_page", DEFAULT_PER_PAGE)
         page = params.pop("page", 1)
         while more_records:
             logger.info(f"Paginating through {zoho_module}, page={page}")
-            response = self.make_request(
+            response = self.fetch_records(
                 zoho_module, per_page=per_page, page=page, **params
             )
             if response is None:
