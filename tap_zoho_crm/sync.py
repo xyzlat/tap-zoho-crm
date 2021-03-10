@@ -95,6 +95,7 @@ def write_bookmark(state, stream, value):
 
 def sync(client, config, state):
     start_date = config.get("start_date") or DEFAULT_START_DATE
+    bookmark_value = None
 
     for stream_name, stream_metadata in STREAMS.items():
         with metrics.record_counter(stream_name) as counter:
@@ -120,4 +121,5 @@ def sync(client, config, state):
                 LOGGER.exception(f"Error during sync of {stream_name}")
                 raise
             finally:
-                write_bookmark(state, stream_name, bookmark_value)
+                if bookmark_value is not None:
+                    write_bookmark(state, stream_name, bookmark_value)
