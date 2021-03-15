@@ -15,42 +15,54 @@ STREAMS = {
     'leads': {
         'module_name': 'Leads',
         'params': {
-            'per_page': 200
+            'per_page': 200,
+            'sort_by': "Modified_Time",
+            'sort_order': "asc"
         },
         'bookmark_key': 'Modified_Time',
     },
     'contacts': {
         'module_name': 'Contacts',
         'params': {
-            'per_page': 200
+            'per_page': 200,
+            'sort_by': "Modified_Time",
+            'sort_order': "asc"
         },
         'bookmark_key': 'Modified_Time',
     },
     'deals': {
         'module_name': 'Deals',
         'params': {
-            'per_page': 200
+            'per_page': 200,
+            'sort_by': "Modified_Time",
+            'sort_order': "asc"
         },
         'bookmark_key': 'Modified_Time',
     },
     'accounts': {
         'module_name': 'Accounts',
         'params': {
-            'per_page': 200
+            'per_page': 200,
+            'sort_by': "Modified_Time",
+            'sort_order': "asc"
         },
         'bookmark_key': 'Modified_Time',
     },
     'events': {
         'module_name': 'Events',
         'params': {
-            'per_page': 200
+            'per_page': 200,
+            'sort_by': "Modified_Time",
+            'sort_order': "asc"
         },
         'bookmark_key': 'Modified_Time',
     },
     'activities': {
         'module_name': 'Activities',
         'params': {
-            'per_page': 200
+            'per_page': 200,
+            'sort_by': "Modified_Time",
+            'sort_order': "asc"
         },
         'bookmark_key': 'Modified_Time',
     }
