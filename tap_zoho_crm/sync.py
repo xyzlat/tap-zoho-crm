@@ -118,7 +118,7 @@ def sync(client, config, state):
                     initial_bookmark_value)
                 bookmark_key = stream_metadata['bookmark_key']
                 params = stream_metadata['params']
-                params['modified_since'] = initial_bookmark_value
+                params['modified_since'] = last_bookmark_value_dt.isoformat()
                 for record in client.paginate_generator(stream_metadata['module_name'], **params):
                     bookmark_value = record[bookmark_key]
                     bookmark_value_dt = strptime_to_utc(bookmark_value)
@@ -128,7 +128,8 @@ def sync(client, config, state):
                     write_record(
                         stream_name, record, time_extracted=utils.now()
                     )
-                    write_bookmark(state, stream_name, bookmark_value)
+                    write_bookmark(state, stream_name,
+                                   bookmark_value_dt.isoformat())
                     counter.increment()
                     last_bookmark_value_dt = bookmark_value_dt
 
