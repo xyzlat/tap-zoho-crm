@@ -12,11 +12,18 @@ from singer.utils import strptime_to_utc
 LOGGER = singer.get_logger()
 DEFAULT_START_DATE = '2010-01-01T00:00:00'
 
-NON_PAGINATE_MODULES = [{
-    'module_name': module_name,
-} for module_name in [
-    'org'
-]]
+NON_PAGINATE_MODULES = [
+    {
+        'module_name': 'org'
+    },
+    {
+        'module_name': 'settings/stages',
+        'stream_name': 'settings_stages',
+        "params": {
+            "module": "Deals"
+        }
+    }
+]
 
 
 def update_currently_syncing(state, stream_name):  # not used yet
@@ -73,8 +80,8 @@ def sync(client, config, state):
     LOGGER.warning(
         f"skipping modules because they are either api_disabled or does not have associated profiles: {[{k:m[k] for k in ['api_name', 'api_supported', 'profiles']}for m in modules if  not(m['api_supported'] and m['profiles'])]}")
 
-    for stream_metadata in api_accessible_modules + NON_PAGINATE_MODULES:
-        stream_name = stream_metadata['module_name']
+        stream_name = stream_metadata.get(
+            "stream_name", stream_metadata['module_name'])
         with metrics.record_counter(stream_name) as counter:
             try:
                 initial_bookmark_value = get_bookmark(
