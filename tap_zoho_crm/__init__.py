@@ -16,7 +16,7 @@ REQUIRED_CONFIG_KEYS = [
     "client_id",
     "client_secret",
     "refresh_token",
-    "api_domain"
+    "api_domain",
 ]
 
 
@@ -27,9 +27,7 @@ def main():
 
     config = parsed_args.config
 
-    client = ZohoClient(
-        **config
-    )
+    client = ZohoClient(**config)
 
     state = {}
     if parsed_args.state:
