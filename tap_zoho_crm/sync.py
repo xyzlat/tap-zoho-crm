@@ -25,6 +25,15 @@ NON_PAGINATE_MODULES = [
     }
 ]
 
+KNOWN_SUBMODULES = {
+    "Deals": [
+        {
+            'module_name': 'Stage_History',
+            'stream_name': 'deals_stage_history',
+        }
+    ]
+}
+
 
 def update_currently_syncing(state, stream_name):  # not used yet
 
@@ -80,8 +89,14 @@ def sync(client, config, state):
     LOGGER.warning(
         f"skipping modules because they are either api_disabled or does not have associated profiles: {[{k:m[k] for k in ['api_name', 'api_supported', 'profiles']}for m in modules if  not(m['api_supported'] and m['profiles'])]}")
 
+    for stream_metadata in api_accessible_modules + NON_PAGINATE_MODULES:
+
         stream_name = stream_metadata.get(
             "stream_name", stream_metadata['module_name'])
+
+        sub_modules = KNOWN_SUBMODULES.get(
+            stream_metadata['module_name']) or []
+
         with metrics.record_counter(stream_name) as counter:
             try:
                 initial_bookmark_value = get_bookmark(
@@ -104,6 +119,16 @@ def sync(client, config, state):
                         stream_metadata['module_name'], **params)
 
                 for record in records_generator:
+                    for sub_module in sub_modules:
+                        for sub_record in client.paginate_generator(
+                                f"{stream_metadata['module_name']}/{record['id']}/{sub_module['module_name']}",
+                                **sub_module.get("params", {})
+                        ):
+                            write_record(
+                                sub_module["stream_name"], sub_record, time_extracted=utils.now(
+                                )
+                            )
+
                     if bookmark_key:
                         bookmark_value = record[bookmark_key]
                         bookmark_value_dt = strptime_to_utc(bookmark_value)
