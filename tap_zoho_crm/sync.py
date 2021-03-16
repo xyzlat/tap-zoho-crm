@@ -31,7 +31,7 @@ KNOWN_SUBMODULES = {
 }
 
 
-def update_currently_syncing(state, stream_name):  # not used yet
+def update_currently_syncing(state, stream_name=None):
 
     if (stream_name is None) and ("currently_syncing" in state):
         del state["currently_syncing"]
@@ -93,6 +93,8 @@ def sync(client, config, state):
 
         sub_modules = KNOWN_SUBMODULES.get(stream_metadata["module_name"]) or []
 
+        update_currently_syncing(state, stream_name)
+
         with metrics.record_counter(stream_name) as counter:
             try:
                 initial_bookmark_value = get_bookmark(state, stream_name, start_date)
@@ -150,5 +152,7 @@ def sync(client, config, state):
                 LOGGER.exception(f"Error during sync of {stream_name}")
                 raise
             finally:
-                if bookmark_value is not None:
+                update_currently_syncing(state)
+
+                if bookmark_key and bookmark_value_dt is not None:
                     write_bookmark(state, stream_name, bookmark_value_dt.isoformat())
