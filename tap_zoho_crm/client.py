@@ -151,7 +151,7 @@ class ZohoClient:
         return standard_fields + custom_fields
 
     def paginate_generator(self, zoho_module, **params):
-        params['fields'] = self.fetch_fields(zoho_module)
+        # params['fields'] = self.fetch_fields(zoho_module)
 
         more_records = True
         per_page = params.pop("per_page", DEFAULT_PER_PAGE)
