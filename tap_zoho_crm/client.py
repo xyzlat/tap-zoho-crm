@@ -7,9 +7,11 @@ import backoff
 
 try:
     import singer
+
     logger = singer.get_logger()
 except:
     import logging
+
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger()
 
@@ -95,14 +97,14 @@ class ZohoClient:
         response = self._session.get(url, params=params, headers=headers)
 
         if response.status_code == 304:
-            logger.warning(
-                f"{url} has no new material after {modified_since}")
+            logger.warning(f"{url} has no new material after {modified_since}")
             return None
         if response.status_code == 429:
             logger.warning("got rate limited, waiting a bit")
         elif response.status_code == 500:
             logger.warning(
-                f"got internal server error from zoho, waiting a bit  url: {url} response: {response.text}")
+                f"got internal server error from zoho, waiting a bit  url: {url} response: {response.text}"
+            )
         elif response.status_code in [400, 401, 403]:
             error_response = response.text
             try:
@@ -112,11 +114,11 @@ class ZohoClient:
             if isinstance(error_response, dict):
                 error_code = error_response.get("code")
                 if error_code == "FEATURE_NOT_ENABLED":
-                    logger.warning(
-                        f"got FEATURE_NOT_ENABLED for url: {url}")
+                    logger.warning(f"got FEATURE_NOT_ENABLED for url: {url}")
                     raise ZohoFeatureNotEnabled()
             logger.warning(
-                f"got possible bad auth, refreshing tokens and trying again url: {url} response: {response.text}")
+                f"got possible bad auth, refreshing tokens and trying again url: {url} response: {response.text}"
+            )
             self.request_refresh_token()
         else:
             response.raise_for_status()
@@ -131,7 +133,7 @@ class ZohoClient:
     def fetch_list_of_modules(self):
         url = f"{self.api_domain}{API_PATH}settings/modules"
         response = self.make_request(url)
-        return response['modules']
+        return response["modules"]
 
     def fetch_fields(self, zoho_module):
         url = f"{self.api_domain}{API_PATH}settings/fields"
@@ -139,11 +141,11 @@ class ZohoClient:
         response = self.make_request(url, **params)
         standard_fields, custom_fields = [], []
 
-        for field_meta in response['fields']:
-            if field_meta['custom_field']:
-                custom_fields.append(field_meta['api_name'])
+        for field_meta in response["fields"]:
+            if field_meta["custom_field"]:
+                custom_fields.append(field_meta["api_name"])
             else:
-                standard_fields.append(field_meta['api_name'])
+                standard_fields.append(field_meta["api_name"])
 
         logger.info(f"requesting following fields for module: '{zoho_module}'")
         logger.info(f"standard fields: {standard_fields}")
@@ -151,13 +153,12 @@ class ZohoClient:
         return standard_fields + custom_fields
 
     def paginate_one_page_results(self, zoho_module, **params):
-        response = self.fetch_records(
-            zoho_module, **params
-        )
+        response = self.fetch_records(zoho_module, **params)
         keys = list(response.keys())
         if len(keys) > 1:
             raise AttributeError(
-                f"getting data from module: '{zoho_module}' resulted in response with more than one root key: {response}")
+                f"getting data from module: '{zoho_module}' resulted in response with more than one root key: {response}"
+            )
         for record in response[keys[0]]:
             yield record
 
