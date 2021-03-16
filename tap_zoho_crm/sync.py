@@ -3,6 +3,7 @@ from datetime import date, datetime, timedelta
 import time
 from urllib.parse import urlparse
 from dateutil.parser import parse
+from tap_zoho_crm.client import ZohoFeatureNotEnabled
 
 import singer
 from singer import metrics, utils
@@ -11,66 +12,9 @@ from singer.utils import strptime_to_utc
 LOGGER = singer.get_logger()
 DEFAULT_START_DATE = '2010-01-01T00:00:00'
 
-STREAMS = {
-    'leads': {
-        'module_name': 'Leads',
-        'params': {
-            'per_page': 200,
-            'sort_by': "Modified_Time",
-            'sort_order': "asc"
-        },
-        'bookmark_key': 'Modified_Time',
-    },
-    'contacts': {
-        'module_name': 'Contacts',
-        'params': {
-            'per_page': 200,
-            'sort_by': "Modified_Time",
-            'sort_order': "asc"
-        },
-        'bookmark_key': 'Modified_Time',
-    },
-    'deals': {
-        'module_name': 'Deals',
-        'params': {
-            'per_page': 200,
-            'sort_by': "Modified_Time",
-            'sort_order': "asc"
-        },
-        'bookmark_key': 'Modified_Time',
-    },
-    'accounts': {
-        'module_name': 'Accounts',
-        'params': {
-            'per_page': 200,
-            'sort_by': "Modified_Time",
-            'sort_order': "asc"
-        },
-        'bookmark_key': 'Modified_Time',
-    },
-    'events': {
-        'module_name': 'Events',
-        'params': {
-            'per_page': 200,
-            'sort_by': "Modified_Time",
-            'sort_order': "asc"
-        },
-        'bookmark_key': 'Modified_Time',
-    },
-    'activities': {
-        'module_name': 'Activities',
-        'params': {
-            'per_page': 200,
-            'sort_by': "Modified_Time",
-            'sort_order': "asc"
-        },
-        'bookmark_key': 'Modified_Time',
-    }
-}
 
+def update_currently_syncing(state, stream_name):  # not used yet
 
-# not used yet
-def update_currently_syncing(state, stream_name):
     if (stream_name is None) and ("currently_syncing" in state):
         del state["currently_syncing"]
     else:
@@ -109,7 +53,22 @@ def sync(client, config, state):
     start_date = config.get("start_date") or DEFAULT_START_DATE
     bookmark_value = None
 
-    for stream_name, stream_metadata in STREAMS.items():
+    modules = client.fetch_list_of_modules()
+    api_accessible_modules = [{
+        'module_name': m['api_name'],
+        'params': {
+            'per_page': 200,
+            'sort_by': "Modified_Time",
+            'sort_order': "asc"
+        },
+        'bookmark_key': 'Modified_Time',
+    } for m in modules if m['api_supported'] and m['profiles']]
+
+    LOGGER.warning(
+        f"skipping modules because they are either api_disabled or does not have associated profiles: {[{k:m[k] for k in ['api_name', 'api_supported', 'profiles']}for m in modules if  not(m['api_supported'] and m['profiles'])]}")
+
+    for stream_metadata in api_accessible_modules:
+        stream_name = stream_metadata['module_name']
         with metrics.record_counter(stream_name) as counter:
             try:
                 initial_bookmark_value = get_bookmark(
@@ -132,7 +91,9 @@ def sync(client, config, state):
                                    bookmark_value_dt.isoformat())
                     counter.increment()
                     last_bookmark_value_dt = bookmark_value_dt
-
+            except ZohoFeatureNotEnabled:
+                LOGGER.warning(
+                    f"Skipping stream_name: {stream_name} as its not enabled for customer")
             except:
                 LOGGER.exception(f"Error during sync of {stream_name}")
                 raise
