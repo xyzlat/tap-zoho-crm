@@ -12,6 +12,12 @@ from singer.utils import strptime_to_utc
 LOGGER = singer.get_logger()
 DEFAULT_START_DATE = '2010-01-01T00:00:00'
 
+NON_PAGINATE_MODULES = [{
+    'module_name': module_name,
+} for module_name in [
+    'org'
+]]
+
 
 def update_currently_syncing(state, stream_name):  # not used yet
 
@@ -67,7 +73,7 @@ def sync(client, config, state):
     LOGGER.warning(
         f"skipping modules because they are either api_disabled or does not have associated profiles: {[{k:m[k] for k in ['api_name', 'api_supported', 'profiles']}for m in modules if  not(m['api_supported'] and m['profiles'])]}")
 
-    for stream_metadata in api_accessible_modules:
+    for stream_metadata in api_accessible_modules + NON_PAGINATE_MODULES:
         stream_name = stream_metadata['module_name']
         with metrics.record_counter(stream_name) as counter:
             try:
@@ -75,22 +81,40 @@ def sync(client, config, state):
                     state, stream_name, start_date)
                 last_bookmark_value_dt = strptime_to_utc(
                     initial_bookmark_value)
-                bookmark_key = stream_metadata['bookmark_key']
-                params = stream_metadata['params']
-                params['modified_since'] = last_bookmark_value_dt.isoformat()
-                for record in client.paginate_generator(stream_metadata['module_name'], **params):
-                    bookmark_value = record[bookmark_key]
-                    bookmark_value_dt = strptime_to_utc(bookmark_value)
-                    if bookmark_value_dt < last_bookmark_value_dt:
-                        raise RuntimeError(
-                            f"out of order data seen!, last_bookmark_value: '{last_bookmark_value_dt}', new_book_mark_value: '{bookmark_value_dt}', full record: {record}")
-                    write_record(
-                        stream_name, record, time_extracted=utils.now()
-                    )
-                    write_bookmark(state, stream_name,
-                                   bookmark_value_dt.isoformat())
+
+                bookmark_key = stream_metadata.get('bookmark_key')
+
+                params = stream_metadata.get('params') or {}
+                per_page = params.get('per_page')
+
+                if per_page:
+                    # paginating
+                    params['modified_since'] = last_bookmark_value_dt.isoformat()
+                    records_generator = client.paginate_generator(
+                        stream_metadata['module_name'], **params)
+                else:
+                    records_generator = client.paginate_one_page_results(
+                        stream_metadata['module_name'], **params)
+
+                for record in records_generator:
+                    if bookmark_key:
+                        bookmark_value = record[bookmark_key]
+                        bookmark_value_dt = strptime_to_utc(bookmark_value)
+                        if bookmark_value_dt < last_bookmark_value_dt:
+                            raise RuntimeError(
+                                f"out of order data seen!, last_bookmark_value: '{last_bookmark_value_dt}', new_book_mark_value: '{bookmark_value_dt}', full record: {record}")
+                        write_record(
+                            stream_name, record, time_extracted=utils.now()
+                        )
+                        write_bookmark(state, stream_name,
+                                       bookmark_value_dt.isoformat())
+                        last_bookmark_value_dt = bookmark_value_dt
+                    else:
+                        # no bookmark
+                        write_record(
+                            stream_name, record, time_extracted=utils.now()
+                        )
                     counter.increment()
-                    last_bookmark_value_dt = bookmark_value_dt
             except ZohoFeatureNotEnabled:
                 LOGGER.warning(
                     f"Skipping stream_name: {stream_name} as its not enabled for customer")

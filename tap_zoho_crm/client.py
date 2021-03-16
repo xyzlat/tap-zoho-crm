@@ -150,6 +150,17 @@ class ZohoClient:
         logger.info(f"custom fields: {custom_fields}")
         return standard_fields + custom_fields
 
+    def paginate_one_page_results(self, zoho_module, **params):
+        response = self.fetch_records(
+            zoho_module, **params
+        )
+        keys = list(response.keys())
+        if len(keys) > 1:
+            raise AttributeError(
+                f"getting data from module: '{zoho_module}' resulted in response with more than one root key: {response}")
+        for record in response[keys[0]]:
+            yield record
+
     def paginate_generator(self, zoho_module, **params):
         # params['fields'] = self.fetch_fields(zoho_module)
 
