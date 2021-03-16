@@ -130,4 +130,6 @@ def sync(client, config, state):
                 raise
             finally:
                 if bookmark_value is not None:
-                    write_bookmark(state, stream_name, bookmark_value)
+                    write_bookmark(
+                        state, stream_name, bookmark_value_dt.isoformat()
+                    )
