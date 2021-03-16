@@ -1,5 +1,6 @@
 import os
 import requests
+import json
 from requests.exceptions import ConnectionError, Timeout, HTTPError
 import datetime
 import backoff
@@ -20,6 +21,10 @@ DEFAULT_PER_PAGE = 200
 
 
 class WaitAndRetry(Exception):
+    pass
+
+
+class ZohoFeatureNotEnabled(Exception):
     pass
 
 
@@ -97,8 +102,19 @@ class ZohoClient:
             logger.warning("got rate limited, waiting a bit")
         elif response.status_code == 500:
             logger.warning(
-                "got internal server error from zoho, waiting a bit")
+                f"got internal server error from zoho, waiting a bit  url: {url} response: {response.text}")
         elif response.status_code in [400, 401, 403]:
+            error_response = response.text
+            try:
+                error_response = json.loads(error_response)
+            except (TypeError, json.decoder.JSONDecodeError):
+                pass
+            if isinstance(error_response, dict):
+                error_code = error_response.get("code")
+                if error_code == "FEATURE_NOT_ENABLED":
+                    logger.warning(
+                        f"got FEATURE_NOT_ENABLED for url: {url}")
+                    raise ZohoFeatureNotEnabled()
             logger.warning(
                 f"got possible bad auth, refreshing tokens and trying again url: {url} response: {response.text}")
             self.request_refresh_token()
@@ -111,6 +127,11 @@ class ZohoClient:
     def fetch_records(self, zoho_module, **params):
         url = f"{self.api_domain}{API_PATH}{zoho_module}"
         return self.make_request(url, **params)
+
+    def fetch_list_of_modules(self):
+        url = f"{self.api_domain}{API_PATH}settings/modules"
+        response = self.make_request(url)
+        return response['modules']
 
     def fetch_fields(self, zoho_module):
         url = f"{self.api_domain}{API_PATH}settings/fields"
