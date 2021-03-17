@@ -157,7 +157,7 @@ class ZohoClient:
         keys = list(response.keys())
         if len(keys) > 1:
             raise AttributeError(
-                f"getting data from module: '{zoho_module}' resulted in response with more than one root key: {response}"
+                f"getting data from module: '{zoho_module}' resulted in response with more than one root key: {json.dumps(response)}"
             )
         for record in response[keys[0]]:
             yield record
