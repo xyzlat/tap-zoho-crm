@@ -119,6 +119,7 @@ def sync(client, config, state):
                             f"{stream_metadata['module_name']}/{record['id']}/{sub_module['module_name']}",
                             **sub_module.get("params", {}),
                         ):
+                            sub_record["parent_id"] = record["id"]
                             write_record(
                                 sub_module["stream_name"],
                                 sub_record,
