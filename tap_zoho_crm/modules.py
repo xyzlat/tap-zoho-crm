@@ -76,12 +76,6 @@ PAGINATE_MODULES = {
         "params": {"per_page": 200, "sort_by": "Modified_Time", "sort_order": "asc"},
         "bookmark_key": "Modified_Time",
     },
-    "UsersInEupry": {
-        "stream_name": "usersineupry",
-        "module_name": "UsersInEupry",
-        "params": {"per_page": 200, "sort_by": "Modified_Time", "sort_order": "asc"},
-        "bookmark_key": "Modified_Time",
-    },
     "Lead_Status_History": {
         "stream_name": "lead_status_history",
         "module_name": "Lead_Status_History",
