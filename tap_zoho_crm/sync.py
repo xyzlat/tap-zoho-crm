@@ -96,6 +96,7 @@ def sync(client, config, state):
         update_currently_syncing(state, stream_name)
 
         with metrics.record_counter(stream_name) as counter:
+            bookmark_key = bookmark_value_dt = None
             try:
                 initial_bookmark_value = get_bookmark(state, stream_name, start_date)
                 last_bookmark_value_dt = strptime_to_utc(initial_bookmark_value)
