@@ -52,7 +52,7 @@ def write_bookmark(state, stream, value):
     singer.write_state(state)
 
 
-def update_bookmark_without_write(state, stream, value):
+def update_bookmark(state, stream, value):
     if "bookmarks" not in state:
         state["bookmarks"] = {}
     state["bookmarks"][stream] = value
@@ -130,7 +130,7 @@ def sync(client, config, state):
                             else:
                                 sub_bookmark_value = utils.now().isoformat()
 
-                            update_bookmark_without_write(
+                            update_bookmark(
                                 state, sub_module["stream_name"], sub_bookmark_value
                             )
 
