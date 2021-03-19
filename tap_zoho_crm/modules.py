@@ -101,6 +101,7 @@ KNOWN_SUBMODULES = {
         {
             "module_name": "Stage_History",
             "stream_name": "deals_stage_history",
+            "bookmark_key": "Last_Modified_Time",
         }
     ]
 }
