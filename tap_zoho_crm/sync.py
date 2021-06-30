@@ -1,8 +1,4 @@
 # pylint: disable=too-many-lines
-from datetime import date, datetime, timedelta
-import time
-from urllib.parse import urlparse
-from dateutil.parser import parse
 from tap_zoho_crm.client import ZohoFeatureNotEnabled
 from tap_zoho_crm.modules import (
     NON_PAGINATE_MODULES,

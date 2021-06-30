@@ -1,4 +1,3 @@
-import os
 import requests
 import json
 from requests.exceptions import ConnectionError, Timeout, HTTPError
