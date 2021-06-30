@@ -122,7 +122,7 @@ class ZohoClient:
             self.request_refresh_token()
         else:
             response.raise_for_status()
-            return response.json()
+            return None if response.status_code == 204 else response.json()
 
         raise WaitAndRetry()
 
