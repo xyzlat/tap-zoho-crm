@@ -4,7 +4,6 @@ import sys
 import json
 import argparse
 import singer
-from singer import metadata, utils
 from tap_zoho_crm.client import ZohoClient
 from tap_zoho_crm.sync import sync
 
