@@ -96,9 +96,8 @@ class ZohoClient:
         response = self._session.get(url, params=params, headers=headers)
 
         # The Zoho API documentation has no explicit documentation for non-error response codes, but the
-        # resource endpoint returns 204 No Content for the Approvals module for some reason.
-        # Since the Approvals module is no longer in the list of "Supported modules", this might be due to
-        # its deprecation, but I've been unable to find any documentation of this.
+        # resource endpoint returns 204 No Content in some unknown circumstances.
+        # Thus, the "reluctant path" was born.
         if response.status_code == 204:
             logger.warning(f"{url} has no content")
             return None

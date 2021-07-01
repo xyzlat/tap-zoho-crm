@@ -1,9 +1,4 @@
 PAGINATE_MODULES = {
-    "Approvals": {
-        "stream_name": "approvals",
-        "module_name": "Approvals",
-        "params": {"per_page": 200},
-    },
     "Leads": {
         "stream_name": "leads",
         "module_name": "Leads",
